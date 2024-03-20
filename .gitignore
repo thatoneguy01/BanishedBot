@@ -1,0 +1,7 @@
+/.venv
+/.vscode
+/BanishedBot.egg-info
+/Features.txt
+/pyproject.toml
+*.pyc
+*.db
