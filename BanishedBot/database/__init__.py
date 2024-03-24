@@ -1,9 +1,10 @@
 import os
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from constant import SRC_DIR
+from sqlalchemy.orm import sessionmaker, declarative_base
+# from sqlalchemy.ext.declarative import declarative_base
+
+from BanishedBot.constant import SRC_DIR
 
 database_file = f"{SRC_DIR}/database/database.db"
 if not os.path.isfile(database_file):

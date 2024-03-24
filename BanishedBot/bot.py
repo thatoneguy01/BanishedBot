@@ -24,7 +24,7 @@ class BanishedBot(commands.Bot):
         self.loaded_cogs = []
 
     async def init_db(self):
-        import database.objects
+        import database.models
         async with database.engine.begin() as conn:
             await conn.run_sync(database.Base.metadata.create_all)
         session = database.Session()
@@ -36,13 +36,20 @@ class BanishedBot(commands.Bot):
             await self.load_extension(f"cogs.{cog}")
 
     async def setup_hook(self):
-        await self.init_db()
+        # await self.init_db()
         self.database = database.Session()
         await self.load_cogs()
-        #exit()
+        # exit()
+
+    
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 bot = BanishedBot()
+
+@bot.check
+async def check_commands(ctx):
+    return "Can Bot" in [r.name for r in ctx.author.roles] and ctx.channel.name == "bot-testing"
+
 bot.run(TOKEN)

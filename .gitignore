@@ -3,5 +3,6 @@
 /BanishedBot.egg-info
 /Features.txt
 /pyproject.toml
+/build
 *.pyc
 *.db

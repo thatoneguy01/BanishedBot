@@ -1,6 +1,7 @@
 {
     "loaded_cogs": [
         "dice",
-        "economy"
+        "economy",
+        "moderation"
     ]
 }

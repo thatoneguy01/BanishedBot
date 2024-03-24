@@ -1,4 +1,6 @@
+import discord
 from discord.ext import commands
+from discord import app_commands
 
 import random
 
@@ -32,7 +34,8 @@ class Dice(commands.Cog):
             return [random.randint(-1,1) for _ in range(number)]
 
     #TODO: Expand roll syntax to include more of what roll20 does
-    @commands.command(aliases=['r'])
+    @commands.command(aliases=['r'], with_app_command=True)
+    @app_commands.guilds(discord.Object(id=144252831833128960))
     async def roll(self, ctx, *, args):
         command = "".join(args).lower()
         command = command.replace('+', " + ").replace('-', " - ")
