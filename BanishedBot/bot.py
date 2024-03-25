@@ -1,5 +1,5 @@
 # bot.py
-import os, json
+import os, json, sys, signal, asyncio
 from dotenv import load_dotenv
 
 import discord
@@ -34,6 +34,10 @@ class BanishedBot(commands.Bot):
     async def load_cogs(self):
         for cog in self.config["loaded_cogs"]:
             await self.load_extension(f"cogs.{cog}")
+    
+    async def unload_cogs(self):
+        for cog in self.config["loaded_cogs"]:
+            await self.remove_cog(cog)
 
     async def setup_hook(self):
         # await self.init_db()
@@ -41,12 +45,17 @@ class BanishedBot(commands.Bot):
         await self.load_cogs()
         # exit()
 
-    
 
-load_dotenv()
+load_dotenv(override=True)
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 bot = BanishedBot()
+
+# def signal_handler(sig, frame):
+#     asyncio.run(bot.unload_cogs())
+#     sys.exit(0)
+
+# signal.signal(signal.SIGINT, signal_handler)
 
 @bot.check
 async def check_commands(ctx):

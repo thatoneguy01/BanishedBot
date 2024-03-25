@@ -15,6 +15,7 @@ class Economy(commands.Cog):
         self.bot = bot
         self.accounts = LockingCache()
         self.voice_time = LockingCache()
+        self.sync_cache.start()
 
     async def cog_load(self):
         async with self.accounts:
@@ -22,6 +23,10 @@ class Economy(commands.Cog):
             for acc in db_accounts:
                 self.accounts.cache[acc.username] = acc.balance
         return await super().cog_load()
+
+    async def cog_unload(self) -> None:
+        await self.sync_cache()
+        return await super().cog_unload()
     
     async def mod_points(self, username, amount):
         async with self.accounts:
@@ -32,14 +37,20 @@ class Economy(commands.Cog):
                 
 
     @tasks.loop(minutes=5)
-    async def update_cache(self):
+    async def sync_cache(self):
+        print("SYNC CACHE")
         async with self.accounts:
             db_accounts = await Account.get_all()
             for acc in db_accounts:
-                if acc.username in accounts.cache:
-                    acc.balance = self.accounts.cache[acc.username]
+                if acc.username in self.accounts.cache:
+                    await acc.update(self.accounts.cache[acc.username])
                 else:
                     self.accounts.cache[acc.username] = acc.balance
+            db_names = [a.username for a in db_accounts]
+            for (username, balance) in self.accounts.cache.items():
+                if username not in db_names:
+                    await Account.create(username, balance)
+            
     
     @commands.Cog.listener()
     async def on_message(self, message):
