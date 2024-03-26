@@ -21,12 +21,12 @@ class Account(Base):
         async with Session() as db:
             statement = select(Account)
             result = await db.execute(statement)
-            return result
+            list_result = [r[0] for r in result.all()]
+            return list_result
         
     async def update(self, new_balance):
         async with Session() as db:
             self.balance = new_balance
-            print(f"session.dirty: {str(db.dirty)}")
             await db.flush()
             await db.commit()
 

@@ -2,6 +2,7 @@
     "loaded_cogs": [
         "dice",
         "economy",
-        "moderation"
+        "moderation",
+        "trivia"
     ]
 }

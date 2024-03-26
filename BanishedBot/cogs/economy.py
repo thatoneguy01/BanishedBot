@@ -38,7 +38,6 @@ class Economy(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def sync_cache(self):
-        print("SYNC CACHE")
         async with self.accounts:
             db_accounts = await Account.get_all()
             for acc in db_accounts:
