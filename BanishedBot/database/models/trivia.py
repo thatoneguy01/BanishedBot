@@ -1,33 +1,11 @@
 import json
 
 from sqlalchemy import Column, Unicode, UnicodeText, Boolean
-from sqlalchemy.ext.hybrid import hybrid_property
-import sqlalchemy.types as types
 
 from BanishedBot.database import Base
 from BanishedBot.database import Session
 from BanishedBot.constant import SRC_DIR
-
-class Json(types.TypeDecorator):
-    @property
-    def python_type(self):
-        return object
-
-    impl = types.String
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = json.dumps(value)
-        return value
-
-    def process_literal_param(self, value, dialect):
-        return value
-
-    def process_result_value(self, value, dialect):
-        try:
-            return json.loads(value)
-        except (ValueError, TypeError):
-            return None
+from BanishedBot.utils import Json
 
 
 class Trivia(Base):
@@ -51,6 +29,16 @@ class Trivia(Base):
         self.difficulty = difficulty
         self.used = used
 
+    @classmethod
+    def from_json(clsm, tq):
+        t = Trivia(id_str=tq["id"],
+                    category=tq["category"],
+                    correct_answer=tq["correctAnswer"],
+                    all_answers=tq["incorrectAnswers"]+[tq["correctAnswer"]],
+                    question=tq["question"]["text"],
+                    tags=tq["tags"],
+                    difficulty=tq["difficulty"])
+        return t
     
     async def load_initial():
         async with Session() as db:

@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord.ext import tasks
 from discord.ext.commands import Context, MemberConverter
-from discord import User, app_commands
+from discord import app_commands
 import discord
 
 from BanishedBot.database.models.account import Account
@@ -16,11 +16,13 @@ class Economy(commands.Cog):
         self.accounts = LockingCache()
         self.voice_time = LockingCache()
         self.sync_cache.start()
+        self.log_cache.start()
 
     async def cog_load(self):
         async with self.accounts:
             db_accounts = await Account.get_all()
             for acc in db_accounts:
+                assert acc.username is not None
                 self.accounts.cache[acc.username] = acc.balance
         return await super().cog_load()
 
@@ -35,18 +37,24 @@ class Economy(commands.Cog):
             except KeyError:
                 self.accounts.cache[username] = amount
                 
+    @tasks.loop(seconds=10)
+    async def log_cache(self):
+        async with self.accounts:
+            print(self.accounts.cache)
 
     @tasks.loop(minutes=5)
     async def sync_cache(self):
         async with self.accounts:
             db_accounts = await Account.get_all()
             for acc in db_accounts:
+                assert acc.username is not None
                 if acc.username in self.accounts.cache:
                     await acc.update(self.accounts.cache[acc.username])
                 else:
                     self.accounts.cache[acc.username] = acc.balance
             db_names = [a.username for a in db_accounts]
             for (username, balance) in self.accounts.cache.items():
+                assert username is not None
                 if username not in db_names:
                     await Account.create(username, balance)
             
@@ -54,6 +62,8 @@ class Economy(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.content.startswith(self.bot.command_prefix):
+            return
+        if not message.author.global_name:
             return
         await self.mod_points(message.author.global_name, 1)
 

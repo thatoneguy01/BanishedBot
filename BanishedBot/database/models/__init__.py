@@ -1,2 +1,2 @@
-__all__ = ["account", "trivia"]
-from . import *
+__all__ = ["account", "trivia", "trivia_stat"]
+# from . import *

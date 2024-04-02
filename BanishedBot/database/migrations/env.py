@@ -19,7 +19,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from BanishedBot.database import Base
-import BanishedBot.database.models
+from BanishedBot.database.models import *
 target_metadata = Base.metadata
 # target_metadata = None
 
