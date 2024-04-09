@@ -1,6 +1,8 @@
-import json
+import json, random, datetime, time
 
-from sqlalchemy import Column, Unicode, UnicodeText, Boolean
+from sqlalchemy import Column, Unicode, UnicodeText, Date
+from sqlalchemy import update, select
+from sqlalchemy.sql.expression import func
 
 from BanishedBot.database import Base
 from BanishedBot.database import Session
@@ -17,7 +19,7 @@ class Trivia(Base):
     question = Column(UnicodeText, nullable=False)
     tags = Column(Json, nullable=False)
     difficulty = Column(Unicode(6), nullable=False)
-    used = Column(Boolean, nullable=False)
+    used = Column(Date, nullable=True)
 
     def __init__(self, id_str, category, correct_answer, all_answers, question, tags, difficulty, used = False):
         self.id = id_str
@@ -39,6 +41,38 @@ class Trivia(Base):
                     tags=tq["tags"],
                     difficulty=tq["difficulty"])
         return t
+    
+    @classmethod
+    async def get_current(cls):
+        async with Session() as db:
+            query = select(Trivia).where(used=datetime.date.fromtimestamp(time.time()-3*60*60))
+            row = db.execute(query).first()
+            if len(row) < 1:
+                return Trivia.get_unused_or_reset()
+            else:
+                return row[0][0]
+            
+    @classmethod
+    async def reset_used(cls, db):
+        q = update(Trivia).values(used=None)
+        await db.execute(q)
+        db.flush()
+        db.commit()
+    
+    @classmethod
+    async def get_unused_or_reset(cls):
+        async with Session() as db:
+            unused_q = select(Trivia).where(used=None).order_by(func.random()).limit(5)
+            unused_rows = await db.execute(unused_q).all()
+            if len(unused_rows)==0:
+                Trivia.reset_used(db)
+                unused_rows = await db.execute(unused_q).all()
+            questions, _ = zip(*unused_rows)
+            q = questions[0]
+            q.used = datetime.date.today()
+            db.flush()
+            db.commit()
+            return q
     
     async def load_initial():
         async with Session() as db:

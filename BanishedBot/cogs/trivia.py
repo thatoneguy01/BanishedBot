@@ -56,12 +56,16 @@ class TriviaButton(Button['TriviaView']):
 class Trivia(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.trivia_date = None
         self.trivia_question = TEST_TRIVIA
         super().__init__()
 
     async def cog_load(self) -> None:
+        self.trivia_question = TriviaQuestion.get_current()
         return await super().cog_load()
+    
+    @tasks.loop(time=datetime.time(hour=3))
+    async def get_question(self):
+        self.trivia_question = TriviaQuestion.get_unused_or_reset()
     
     @commands.hybrid_command(name="trivia", with_app_command=True)
     @app_commands.guilds(discord.Object(id=144252831833128960))
