@@ -3,10 +3,12 @@ import json
 
 import sqlalchemy.types as types
 
+
 class LockingCache(Lock):
     def __init__(self) -> None:
         self.cache = {}
         super().__init__()
+
 
 class Json(types.TypeDecorator):
     @property

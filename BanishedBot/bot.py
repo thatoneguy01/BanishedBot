@@ -14,6 +14,7 @@ else:
     with open("config.json") as f:
         config = json.load(f)
 
+
 class BanishedBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
@@ -26,7 +27,7 @@ class BanishedBot(commands.Bot):
     async def load_cogs(self):
         for cog in self.config["loaded_cogs"]:
             await self.load_extension(f"cogs.{cog}")
-    
+
     async def unload_cogs(self):
         for cog in self.config["loaded_cogs"]:
             await self.remove_cog(cog)
@@ -38,12 +39,17 @@ class BanishedBot(commands.Bot):
 
 
 load_dotenv(override=True)
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.getenv("DISCORD_TOKEN")
 
 bot = BanishedBot()
 
+
 @bot.check
-async def check_commands(ctx):
-    return "Can Bot" in [r.name for r in ctx.author.roles] and ctx.channel.name == "bot-testing"
+async def check_commands(ctx: commands.Context):
+    return (
+        "Can Bot" in [r.name for r in ctx.author.roles]
+        and ctx.channel.name == "bot-testing"
+    )
+
 
 bot.run(TOKEN)

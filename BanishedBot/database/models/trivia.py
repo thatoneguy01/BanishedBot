@@ -3,6 +3,7 @@ import json, random, datetime, time
 from sqlalchemy import Column, Unicode, UnicodeText, Date
 from sqlalchemy import update, select
 from sqlalchemy.sql.expression import func
+from sqlalchemy.orm import Session as saSession
 
 from BanishedBot.database import Base
 from BanishedBot.database import Session
@@ -44,16 +45,18 @@ class Trivia(Base):
     
     @classmethod
     async def get_current(cls):
+        db: saSession
         async with Session() as db:
-            query = select(Trivia).where(used=datetime.date.fromtimestamp(time.time()-3*60*60))
-            row = db.execute(query).first()
-            if len(row) < 1:
-                return Trivia.get_unused_or_reset()
+            query = select(Trivia).where(Trivia.used==datetime.date.fromtimestamp(time.time()-3*60*60))
+            result = await db.execute(query)
+            row = result.first()
+            if row is None:
+                return await Trivia.get_unused_or_reset()
             else:
-                return row[0][0]
+                return row[0]
             
     @classmethod
-    async def reset_used(cls, db):
+    async def reset_used(cls, db: saSession):
         q = update(Trivia).values(used=None)
         await db.execute(q)
         db.flush()
@@ -61,20 +64,23 @@ class Trivia(Base):
     
     @classmethod
     async def get_unused_or_reset(cls):
+        db: saSession
         async with Session() as db:
-            unused_q = select(Trivia).where(used=None).order_by(func.random()).limit(5)
-            unused_rows = await db.execute(unused_q).all()
+            unused_q = select(Trivia).where(Trivia.used==None).order_by(func.random()).limit(5)
+            result = await db.execute(unused_q)
+            unused_rows = result.all()
             if len(unused_rows)==0:
                 Trivia.reset_used(db)
-                unused_rows = await db.execute(unused_q).all()
-            questions, _ = zip(*unused_rows)
-            q = questions[0]
+                result = await db.execute(unused_q)
+                unused_rows = result.all()
+            q = [o[0] for o in unused_rows][0]
             q.used = datetime.date.today()
-            db.flush()
-            db.commit()
+            await db.flush()
+            await db.commit()
             return q
     
     async def load_initial():
+        db: saSession
         async with Session() as db:
             with open(f"{SRC_DIR}questions.json") as f:
                 trivia_json = json.load(f)

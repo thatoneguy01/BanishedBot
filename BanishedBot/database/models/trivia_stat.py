@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Unicode
 from sqlalchemy import ForeignKey
 from sqlalchemy import select
+from sqlalchemy.orm import Session as saSession
 
 from BanishedBot.database import Base
 from BanishedBot.database import Session
@@ -22,6 +23,7 @@ class TriviaStat(Base):
         self.no_answer = no_answer
 
     async def store_stats(self, question_id, correct=None, incorrect=None):
+        db: saSession
         async with Session() as db:
             s = select(TriviaStat).where(question_id=question_id)
             ts_row = await db.execute(s).first()
